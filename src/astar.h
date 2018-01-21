@@ -32,23 +32,24 @@ typedef struct {
 } AStarStatus;
 
 //functions in parser.h
-int read_csv_file(char *, node **);
+unsigned long read_csv_file(char *, node **);
 
 unsigned long get_nr_of_nodes(char *);
 
-void get_nodes(char *, node **, int);
+void get_nodes(char *, node **, unsigned long);
 
 unsigned long get_next_edge_node(char **, const char *);
 
-void get_edges(FILE *, char *, const char *, node **, int, bool, unsigned int *);
+void get_edges(FILE *, char *, const char *, node **, unsigned long, bool, unsigned int *);
 
 void add_edge(node **, unsigned long, unsigned long, unsigned int);
 
-// functions in astar.c
-long get_node_by_id(node *, unsigned long, unsigned long);
+unsigned long read_binary_file(char *, node **);
 
-
-
-// possible functions to dump the read nodes with edges to a binary file and re-read it faster
-unsigned long read_binary_file(char *, node **, unsigned long );
 void write_binary_file(char *, node *, unsigned long);
+
+void build_edges(char *, node **, unsigned long, unsigned int *);
+
+
+// functions in astar.c
+unsigned long get_node_by_id(node *, unsigned long, unsigned long);

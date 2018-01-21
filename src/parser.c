@@ -12,20 +12,20 @@ unsigned long get_nr_of_nodes(char *filename) {
 
     unsigned long nr_of_nodes = 0;
     char *buffer;
-    size_t characters;
+    size_t characters = 0;
 
 
     FILE *fp = fopen(filename, "r");
     buffer = (char *) malloc(characters * sizeof(char));
 
     //skip the first three lines
-    characters = getline(&buffer, &characters, fp);
-    characters = getline(&buffer, &characters, fp);
-    characters = getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
 
 
     // count number of nodes for array initialization
-    while ((characters = getline(&buffer, &characters, fp)) > 0) {
+    while ((characters = (size_t) getline(&buffer, &characters, fp)) > 0) {
         if (buffer[0] == 'n') {
             nr_of_nodes++;
         } else {
@@ -37,7 +37,7 @@ unsigned long get_nr_of_nodes(char *filename) {
     return nr_of_nodes;
 }
 
-void get_nodes(char *filename, node **nodes, int nr_of_nodes) {
+void get_nodes(char *filename, node **nodes, unsigned long nr_of_nodes) {
     // returns the complete nodes array with all nodes and edges
     // first reads all the node lines
     // the array will be initialized by a length of nr_of_nodes which is computed (read) before
@@ -48,16 +48,16 @@ void get_nodes(char *filename, node **nodes, int nr_of_nodes) {
     // and then build the real edges
     const char delimiters[] = "|";
     char *buffer;
-    size_t characters;
+    size_t characters = 0;
     FILE *fp = fopen(filename, "r");
 
     *nodes = malloc(nr_of_nodes * sizeof(node));
     buffer = (char *) malloc(characters * sizeof(char));
 
     //skip the first three lines of the file because they start with #
-    characters = getline(&buffer, &characters, fp);
-    characters = getline(&buffer, &characters, fp);
-    characters = getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
 
     unsigned long id;
     double lon;
@@ -66,7 +66,7 @@ void get_nodes(char *filename, node **nodes, int nr_of_nodes) {
     // counter to get the current position in the nodes array
     int counter = 0;
 
-    while ((characters = getline(&buffer, &characters, fp)) > 0) {
+    while ((characters = (size_t) getline(&buffer, &characters, fp)) > 0) {
         if (buffer[0] == 'n') {
             // we 'kind of' skip the strsep without an assignment
             strsep(&buffer, delimiters); //this element says 'node'
@@ -98,7 +98,7 @@ void get_nodes(char *filename, node **nodes, int nr_of_nodes) {
 
 }
 
-void build_edges(char *filename, node **nodes, int nr_of_nodes, unsigned int *current_nsucc) {
+void build_edges(char *filename, node **nodes, unsigned long nr_of_nodes, unsigned int *current_nsucc) {
     // this is method is called after all the nodes have been read
     // and the number of neighbours of each node is known
     // this function will go through the csv file again and add the edges to the
@@ -108,18 +108,18 @@ void build_edges(char *filename, node **nodes, int nr_of_nodes, unsigned int *cu
 
     const char delimiters[] = "|";
     char *buffer;
-    size_t characters;
+    size_t characters = 0;
     FILE *fp = fopen(filename, "r");
 
     buffer = (char *) malloc(characters * sizeof(char));
 
     //skip the first three lines of the file because they start with #
-    characters = getline(&buffer, &characters, fp);
-    characters = getline(&buffer, &characters, fp);
-    characters = getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
+    characters = (size_t) getline(&buffer, &characters, fp);
 
 
-    while ((characters = getline(&buffer, &characters, fp)) > 0) {
+    while ((characters = (size_t) getline(&buffer, &characters, fp)) > 0) {
         if (buffer[0] == 'n') {
             continue;
         } else if (buffer[0] == 'w') {
@@ -153,7 +153,7 @@ void add_edge(node **nodes, unsigned long tail_index, unsigned long head_index, 
     *((((*nodes) + tail_index)->successors) + position) = head_index;
 }
 
-void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, int nr_of_nodes, bool nsucc_only,
+void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, unsigned long nr_of_nodes, bool nsucc_only,
                unsigned int *current_nsucc) {
     // method for adding the edges to the nodes array
     // gets called within the get_nodes function after reading all the nodes
@@ -165,15 +165,15 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, int
     bool oneway;
     unsigned long head_id;
     unsigned long tail_id;
-    long tail_index;
-    long head_index;
+    unsigned long tail_index;
+    unsigned long head_index;
     size_t characters;
 
     while (buffer[0] == 'w') {
         for (int i = 0; i < 7; ++i) {
             strsep(&buffer, delimiters); // skip the first 7 useless entries
         }
-        if (strcmp(strsep(&buffer, delimiters), "oneway")) {
+        if (strcmp(strsep(&buffer, delimiters), "oneway") == 0) {
             oneway = false;
         } else {
             oneway = true;
@@ -218,7 +218,7 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, int
                 head_id = get_next_edge_node(&buffer, delimiters);
             }
         }
-        characters = getline(&buffer, &characters, fp);
+        characters = (size_t) getline(&buffer, &characters, fp);
     }
 
     // nsucc_only is true we have know now the number of neighbours for each node
@@ -262,11 +262,11 @@ void write_binary_file(char *filename, node *nodes, unsigned long nr_of_nodes) {
 }
 
 
-unsigned long read_binary_file(char *filename, node ** nodes, unsigned long nr_of_nodes) {
+unsigned long read_binary_file(char *filename, node **nodes) {
     // reads a binary files which has been written before by write_binary_file
     // this is method is way faster than read_csv_file
 
-
+    unsigned long nr_of_nodes;
     FILE *fin;
     unsigned long ntotnsucc = 0UL;
     unsigned long *allsuccessors;
@@ -274,7 +274,8 @@ unsigned long read_binary_file(char *filename, node ** nodes, unsigned long nr_o
     if ((fin = fopen(filename, "r")) == NULL) exit(11);
 
     /* Global data --- header */
-    if (fread(&nr_of_nodes, sizeof(unsigned long), 1, fin) + fread(&ntotnsucc, sizeof(unsigned long), 1, fin) != 2) exit(12);
+    if (fread(&nr_of_nodes, sizeof(unsigned long), 1, fin) + fread(&ntotnsucc, sizeof(unsigned long), 1, fin) != 2)
+        exit(12);
 
     /* getting memory for all data */
     if ((*nodes = (node *) malloc(nr_of_nodes * sizeof(node))) == NULL) exit(13);
@@ -293,13 +294,14 @@ unsigned long read_binary_file(char *filename, node ** nodes, unsigned long nr_o
             (*nodes)[i].successors = allsuccessors;
             allsuccessors += (*nodes)[i].nsucc;
         }
+    return nr_of_nodes;
 }
 
 
-int read_csv_file(char *filename, node **nodes) {
+unsigned long read_csv_file(char *filename, node **nodes) {
     // reads a .csv file and writes it to a binary file for a later fast re-read
 
-    int nr_of_nodes = 0;
+    unsigned long nr_of_nodes = 0;
     // count number of nodes for a proper array initialization no reallocs
     // not sure what is faster here: read node lines twice and malloc once
     // or read once and realloc if necessary

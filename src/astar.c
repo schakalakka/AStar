@@ -4,7 +4,7 @@
 
 #include "astar.h"
 
-long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
+unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
     // returns the index of a node in the array for a given id
     // uses binary search
     // returns -1 if node is not found
@@ -46,18 +46,17 @@ int main(int argc, char *argv[]) {
     bool binary = false;
 
     strcpy(filename, argv[1]);
-    if (strcmp(strrchr(filename, '.'), ".bin")==0) {
-        binary=true;
+    if (strcmp(strrchr(filename, '.'), ".bin") == 0) {
+        binary = true;
     }
 
-    int nr_of_nodes;
-    node *nodes = NULL;
+    unsigned long nr_of_nodes;
+    node *nodes;
 
-    if (binary==true){
-       nr_of_nodes = read_binary_file(filename, &nodes, nr_of_nodes);
-    }
-    else{
+    if (binary == true) {
+        nr_of_nodes = read_binary_file(filename, &nodes);
+    } else {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }
-    printf("%i\n", nr_of_nodes);
+    printf("%lu\n", nr_of_nodes);
 }
