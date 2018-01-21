@@ -25,10 +25,6 @@ long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
     return -1;
 }
 
-void add_edge(node **nodes, unsigned long tail_index, unsigned long head_index) {
-    // method which adds edges to the nodes array
-
-}
 
 
 int main(int argc, char *argv[]) {

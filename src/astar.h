@@ -40,15 +40,15 @@ void get_nodes(char *, node **, int);
 
 unsigned long get_next_edge_node(char **, const char *);
 
-void get_edges(FILE *, char *, const char *, node **, int);
+void get_edges(FILE *, char *, const char *, node **, int, bool, unsigned int *);
 
+void add_edge(node **, unsigned long, unsigned long, unsigned int);
 
 // functions in astar.c
 long get_node_by_id(node *, unsigned long, unsigned long);
 
-void add_edge(node **, unsigned long, unsigned long);
+
 
 // possible functions to dump the read nodes with edges to a binary file and re-read it faster
 void read_binary_file();
-
 void dump_to_binary();
