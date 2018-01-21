@@ -50,5 +50,5 @@ long get_node_by_id(node *, unsigned long, unsigned long);
 
 
 // possible functions to dump the read nodes with edges to a binary file and re-read it faster
-void read_binary_file();
-void dump_to_binary();
+unsigned long read_binary_file(char *, node **, unsigned long );
+void write_binary_file(char *, node *, unsigned long);

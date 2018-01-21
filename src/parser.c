@@ -233,7 +233,71 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, int
 }
 
 
+void write_binary_file(char *filename, node *nodes, unsigned long nr_of_nodes) {
+    // writes a constructed graph (i.e. nodes list) to a binary file for a later very fast re-read
+
+    FILE *fin;
+    unsigned long ntotnsucc = 0UL;
+    for (int i = 0; i < nr_of_nodes; i++) ntotnsucc += nodes[i].nsucc;
+
+    strcpy(strrchr(filename, '.'), ".bin");
+
+    if ((fin = fopen(filename, "wb")) == NULL) exit(31);
+
+    /* Global data --- header */
+    if (fwrite(&nr_of_nodes, sizeof(unsigned long), 1, fin) + fwrite(&ntotnsucc, sizeof(unsigned long), 1, fin) != 2)
+        exit(32);
+
+    /* Writing all nodes */
+    if (fwrite(nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(32);
+
+    /* Writing sucessors in blocks */
+    for (int i = 0; i < nr_of_nodes; i++)
+        if (nodes[i].nsucc) {
+            if (fwrite(nodes[i].successors, sizeof(unsigned long), nodes[i].nsucc, fin) !=
+                nodes[i].nsucc)
+                exit(32);
+        }
+    fclose(fin);
+}
+
+
+unsigned long read_binary_file(char *filename, node ** nodes, unsigned long nr_of_nodes) {
+    // reads a binary files which has been written before by write_binary_file
+    // this is method is way faster than read_csv_file
+
+
+    FILE *fin;
+    unsigned long ntotnsucc = 0UL;
+    unsigned long *allsuccessors;
+
+    if ((fin = fopen(filename, "r")) == NULL) exit(11);
+
+    /* Global data --- header */
+    if (fread(&nr_of_nodes, sizeof(unsigned long), 1, fin) + fread(&ntotnsucc, sizeof(unsigned long), 1, fin) != 2) exit(12);
+
+    /* getting memory for all data */
+    if ((*nodes = (node *) malloc(nr_of_nodes * sizeof(node))) == NULL) exit(13);
+
+    if ((allsuccessors = (unsigned long *) malloc(ntotnsucc * sizeof(unsigned long))) == NULL) exit(15);
+
+    /* Reading all data from file */
+    if (fread(*nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(17);
+
+    if (fread(allsuccessors, sizeof(unsigned long), ntotnsucc, fin) != ntotnsucc) exit(18);
+
+    fclose(fin);
+    /* Setting pointers to successors */
+    for (int i = 0; i < nr_of_nodes; i++)
+        if ((*nodes)[i].nsucc) {
+            (*nodes)[i].successors = allsuccessors;
+            allsuccessors += (*nodes)[i].nsucc;
+        }
+}
+
+
 int read_csv_file(char *filename, node **nodes) {
+    // reads a .csv file and writes it to a binary file for a later fast re-read
 
     int nr_of_nodes = 0;
     // count number of nodes for a proper array initialization no reallocs
@@ -246,6 +310,9 @@ int read_csv_file(char *filename, node **nodes) {
     unsigned int *current_nsucc = (unsigned int *) calloc(nr_of_nodes, sizeof(unsigned int));
     build_edges(filename, nodes, nr_of_nodes, current_nsucc);
     free(current_nsucc);
+
+    write_binary_file(filename, *nodes, nr_of_nodes);
     return nr_of_nodes;
 }
+
 
