@@ -26,8 +26,34 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
 }
 
 
-void astar(node **nodes, int nr_of_nodes) {
+double heuristic_distance(unsigned node_a_index,unsigned long node_b_index, node * nodes, unsigned long nr_of_nodes){
+    // returns the heuristic distance
+    // i.e. the direct shortest distance on the air surface
+    // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
+    // not clear yet which computation method to use
+    // look here http://www.movable-type.co.uk/scripts/latlong.html
+    double lat_a = nodes[node_a_index].lat;
+    double lon_a = nodes[node_a_index].lon;
+    double lat_b = nodes[node_b_index].lat;
+    double lon_b = nodes[node_b_index].lon;
 
+    double distance;
+
+    // computation for heuristic here
+
+
+    return distance;
+}
+
+
+void astar(unsigned long node_start, unsigned long node_goal, node **nodes, unsigned long nr_of_nodes) {
+    //
+    // node_start is the source node id
+    // node_goal is the goal node id
+    // the indices in the nodes list have to be obtained by get_node_by_id
+    // nr_of_nodes states the length of the nodes list
+    unsigned long source_index = get_node_by_id(*nodes, nr_of_nodes, node_start);
+    unsigned long goal_index = get_node_by_id(*nodes, nr_of_nodes, node_goal);
 }
 
 
