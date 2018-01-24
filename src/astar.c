@@ -7,7 +7,7 @@
 unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
     // returns the index of a node in the array for a given id
     // uses binary search
-    // returns -1 if node is not found
+    // returns ULONG_MAX (biggest possible unsigned long) if node is not found
 
     unsigned long first = 0;
     unsigned long last = n - 1;
@@ -22,7 +22,7 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
             last = middle - 1;
         middle = (first + last) / 2;
     }
-    return -1;
+    return ULONG_MAX;
 }
 
 
@@ -58,6 +58,10 @@ double heuristic_distance(unsigned node_a_index,unsigned long node_b_index, node
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // not clear yet which computation method to use
     // look here http://www.movable-type.co.uk/scripts/latlong.html
+
+    // if the indices are bigger or equal than the length of the node list, exit with error code 1
+    if (nr_of_nodes<= node_a_index && nr_of_nodes<= node_b_index) exit(1);
+
     double lat_a = nodes[node_a_index].lat;
     double lon_a = nodes[node_a_index].lon;
     double lat_b = nodes[node_b_index].lat;

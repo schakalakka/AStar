@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <math.h>
+#include <limits.h>
 
 typedef struct {
     unsigned long id;
