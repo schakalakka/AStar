@@ -26,6 +26,32 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
 }
 
 
+double get_weight(unsigned node_a_index,unsigned long node_b_index, node * nodes, unsigned long nr_of_nodes){
+    // returns the weight between two neighbouring nodes
+    // the weight is computed via the euclidean distance
+    // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
+    // if the nodes are not neighboured the return value is -1
+
+    //check if nodes are adjacent
+    for (int i = 0; i < nodes[node_a_index].nsucc; ++i) {
+        if (nodes[node_a_index].successors[i] == node_b_index) {
+            return -1.0;
+        }
+    }
+
+    double lat_a = nodes[node_a_index].lat;
+    double lon_a = nodes[node_a_index].lon;
+    double lat_b = nodes[node_b_index].lat;
+    double lon_b = nodes[node_b_index].lon;
+
+    double weight;
+
+    weight = sqrt((lat_a-lat_b)*(lat_a-lat_b) + (lon_a-lon_b)*(lon_a-lon_b));
+
+    return weight;
+}
+
+
 double heuristic_distance(unsigned node_a_index,unsigned long node_b_index, node * nodes, unsigned long nr_of_nodes){
     // returns the heuristic distance
     // i.e. the direct shortest distance on the air surface
@@ -44,6 +70,7 @@ double heuristic_distance(unsigned node_a_index,unsigned long node_b_index, node
 
     return distance;
 }
+
 
 
 void astar(unsigned long node_start, unsigned long node_goal, node **nodes, unsigned long nr_of_nodes) {
