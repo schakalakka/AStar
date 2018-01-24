@@ -193,7 +193,7 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, uns
             // we can only add edges (or count the number of neighbours
             // both tail and head exists in the node list
             // otherwise we have to ignore them and move on (see the elses)
-            if (tail_index != -1 && head_index != -1) {
+            if (tail_index != ULONG_MAX && head_index != ULONG_MAX) {
                 if (nsucc_only == true) {
                     ((*nodes) + tail_index)->nsucc++;
                     if (oneway == false) ((*nodes) + head_index)->nsucc++;
@@ -207,7 +207,7 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, uns
                 }
                 tail_id = head_id;
                 head_id = get_next_edge_node(&buffer, delimiters);
-            } else if (tail_index == -1 && head_index != -1) {
+            } else if (tail_index == ULONG_MAX && head_index != ULONG_MAX) {
                 tail_id = head_id;
                 head_id = get_next_edge_node(&buffer, delimiters);
             } else {
