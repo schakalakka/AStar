@@ -207,9 +207,6 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, uns
                 }
                 tail_id = head_id;
                 head_id = get_next_edge_node(&buffer, delimiters);
-            } else if (tail_index != -1 && head_index == -1) {
-                tail_id = get_next_edge_node(&buffer, delimiters);
-                head_id = get_next_edge_node(&buffer, delimiters);
             } else if (tail_index == -1 && head_index != -1) {
                 tail_id = head_id;
                 head_id = get_next_edge_node(&buffer, delimiters);
