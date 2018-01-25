@@ -33,6 +33,11 @@ typedef struct {
     Queue whq;
 } AStarStatus;
 
+typedef struct list_elem {
+    unsigned long index;
+    struct list_elem *next;
+} list_elem;
+
 //functions in parser.h
 unsigned long read_csv_file(char *, node **);
 
@@ -56,8 +61,14 @@ void build_edges(char *, node **, unsigned long, unsigned int *);
 // functions in astar.c
 unsigned long get_node_by_id(node *, unsigned long, unsigned long);
 
-double get_weight(unsigned, unsigned long, node *, unsigned long);
+double get_weight(unsigned, unsigned long, node *);
 
-double heuristic_distance(unsigned, unsigned long, node *, unsigned long);
+double heuristic_distance(unsigned long, unsigned long, node *, unsigned long);
 
-void astar(unsigned long, unsigned long, node **, unsigned long);
+void astar(unsigned long, unsigned long, node *, unsigned long);
+
+double get_fscore(AStarStatus);
+
+list_elem *add_element_to_list(unsigned long, list_elem *, AStarStatus *);
+
+list_elem *remove_element_from_list(unsigned long, list_elem *);
