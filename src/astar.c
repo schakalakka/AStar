@@ -4,41 +4,62 @@
 
 #include "astar.h"
 
-list_elem *
-add_element_to_list(unsigned long index_to_add, list_elem *start_of_list, AStarStatus *astar_status_list) {
+list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_list, AStarStatus *astar_status_list) {
+    // adds an alement to a list
+    // the list is always sorted in ascending order
+    // the sorting key is the fscore computed from the AStarStatus
+    //
+    // returned is the beginning of the list (by a pointer)
+    // i.e. either the new element if it is the lowest or
+    // the start from before
+
     list_elem *next_elem = start_of_list;
     list_elem *current_elem = NULL;
     list_elem *new_elem = NULL;
-    if (get_fscore(astar_status_list[index_to_add]) < get_fscore(astar_status_list[next_elem->index])) {
+
+    // check if element is actually the lowest
+    if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
         // add element to the beginning of the list
         // and return new element as the start of the list
         *new_elem = {.index=index_to_add, .next=start_of_list};
         return new_elem;
     }
+
+    // go through the list
     while (next_elem->next != NULL) {
         current_elem = next_elem;
         next_elem = next_elem->next;
-        if (get_fscore(astar_status_list[index_to_add]) < get_fscore(astar_status_list[next_elem->index])) {
-            // add element to the beginning of the list
-            // and return new element as the start of the list
+        if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
+            // insert the element to the list between current_elem and next_elem
+            // and return the start of the list (it did'nt change)
             *new_elem = {.index=index_to_add, .next=next_elem};
             current_elem->next = new_elem;
             return start_of_list;
         }
     }
+    // we land here if we reached the end
+    // i.e. the element has the worst fscore
     *new_elem = {.index=index_to_add, .next=NULL};
     next_elem->next = new_elem;
     return start_of_list;
 }
 
 list_elem *remove_element_from_list(unsigned long index_to_remove, list_elem *start_of_list) {
+    // removes an element from a list
+    //
+    // returns a pointer to the start of the list
+
     list_elem *current_elem = start_of_list;
     list_elem *next_elem = NULL;
+
+    // check if first element is the wanted one
     if (current_elem->index == index_to_remove) {
         start_of_list = current_elem->next;
         free(current_elem);
         return start_of_list;
     }
+
+    // go through the list
     next_elem = current_elem->next;
     while (next_elem != NULL) {
         if (next_elem->index == index_to_remove) {
@@ -49,10 +70,15 @@ list_elem *remove_element_from_list(unsigned long index_to_remove, list_elem *st
         current_elem = next_elem;
         next_elem = current_elem->next;
     }
+
+    // if we are here we could not find the element in the list
+    // not sure how to handle this so far
+    // for now we throw an error and exit TODO
     exit(1);
 }
 
 double get_fscore(AStarStatus astarstatus) {
+    // returns the fscore from a node, in particular from an AStarStatus
     return astarstatus.g + astarstatus.h;
 }
 
@@ -110,7 +136,8 @@ double get_weight(unsigned node_a_index, unsigned long node_b_index, node *nodes
 }
 
 
-double heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node *nodes, unsigned long nr_of_nodes) {
+double
+heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node *nodes, unsigned long nr_of_nodes) {
     // returns the heuristic distance
     // i.e. the direct shortest distance on the air surface
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
