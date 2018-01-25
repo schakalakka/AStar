@@ -5,7 +5,7 @@
 #include "astar.h"
 
 list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_list, AStarStatus *astar_status_list) {
-    // adds an alement to a list
+    // adds an element to a list
     // the list is always sorted in ascending order
     // the sorting key is the fscore computed from the AStarStatus
     //
@@ -21,7 +21,7 @@ list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_l
     if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
         // add element to the beginning of the list
         // and return new element as the start of the list
-        *new_elem = {.index=index_to_add, .next=start_of_list};
+        *new_elem = (list_elem){.index=index_to_add, .next=start_of_list};
         return new_elem;
     }
 
@@ -32,14 +32,14 @@ list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_l
         if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
             // insert the element to the list between current_elem and next_elem
             // and return the start of the list (it did'nt change)
-            *new_elem = {.index=index_to_add, .next=next_elem};
+            *new_elem = (list_elem){.index=index_to_add, .next=next_elem};
             current_elem->next = new_elem;
             return start_of_list;
         }
     }
     // we land here if we reached the end
     // i.e. the element has the worst fscore
-    *new_elem = {.index=index_to_add, .next=NULL};
+    *new_elem = (list_elem){.index=index_to_add, .next=NULL};
     next_elem->next = new_elem;
     return start_of_list;
 }
