@@ -8,6 +8,12 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
     // returns the index of a node in the array for a given id
     // uses binary search
     // returns ULONG_MAX (biggest possible unsigned long) if node is not found
+    //
+    // why does ULONG_MAX work as a "not found" return value?
+    // the number of nodes n is an unsigned long, let's assume n=ULONG_MAX
+    // then we have the indices 0..ULONG_MAX-1
+    // -> ULONG_MAX can never be an index and means therefore it is not found
+    // Note (by such a number of nodes our RAM probably would have killed us anyway :D)
 
     unsigned long first = 0;
     unsigned long last = n - 1;
