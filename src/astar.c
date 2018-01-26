@@ -21,7 +21,7 @@ list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_l
     if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
         // add element to the beginning of the list
         // and return new element as the start of the list
-        *new_elem = (list_elem){.index=index_to_add, .next=start_of_list};
+        *new_elem = (list_elem) {.index=index_to_add, .next=start_of_list};
         return new_elem;
     }
 
@@ -32,14 +32,14 @@ list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_l
         if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
             // insert the element to the list between current_elem and next_elem
             // and return the start of the list (it did'nt change)
-            *new_elem = (list_elem){.index=index_to_add, .next=next_elem};
+            *new_elem = (list_elem) {.index=index_to_add, .next=next_elem};
             current_elem->next = new_elem;
             return start_of_list;
         }
     }
     // we land here if we reached the end
     // i.e. the element has the worst fscore
-    *new_elem = (list_elem){.index=index_to_add, .next=NULL};
+    *new_elem = (list_elem) {.index=index_to_add, .next=NULL};
     next_elem->next = new_elem;
     return start_of_list;
 }
@@ -110,7 +110,7 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
 }
 
 
-double get_weight(unsigned node_a_index, unsigned long node_b_index, node *nodes) {
+double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *nodes) {
     // returns the weight between two neighbouring nodes
     // the weight is computed via the euclidean distance
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
@@ -167,15 +167,70 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
     // node_goal is the goal node id
     // the indices in the nodes list have to be obtained by get_node_by_id
     // nr_of_nodes states the length of the nodes list
-    unsigned long source_index = get_node_by_id(nodes, nr_of_nodes, node_start);
+    unsigned long start_index = get_node_by_id(nodes, nr_of_nodes, node_start);
     unsigned long goal_index = get_node_by_id(nodes, nr_of_nodes, node_goal);
+
+
+    list_elem *OPEN_LIST = NULL;
+    list_elem *CLOSED_LIST = NULL;
+
+    list_elem *current_element;
 
     AStarStatus *status_list = malloc(nr_of_nodes * sizeof(AStarStatus));
 
-    status_list[source_index].g = 0;
-    status_list[source_index].h = heuristic_distance(source_index, goal_index, nodes, nr_of_nodes);
-    status_list[source_index].parent = ULONG_MAX;
-    status_list[source_index].whq = OPEN;
+    // put node_start (i.e. start_index) in open list with fscore = hscore
+    status_list[start_index].g = 0;
+    status_list[start_index].h = heuristic_distance(start_index, goal_index, nodes, nr_of_nodes);
+    status_list[start_index].parent = ULONG_MAX;
+    status_list[start_index].whq = OPEN;
+    OPEN_LIST = &(list_elem) {.index=start_index, .next=NULL};
+
+    // while open list is not empty
+    while (OPEN_LIST != NULL) {
+        // find minimal node
+        current_element = OPEN_LIST;
+        double current_fscore = get_fscore(status_list[current_element->index]);
+        unsigned long current_index = current_element->index;
+        while (current_element->next != NULL) {
+            current_element = current_element->next;
+            if (current_fscore > get_fscore(status_list[current_element->index])) {
+                current_fscore = get_fscore(status_list[current_element->index]);
+                current_index = current_element->index;
+            }
+        }
+
+        if (current_index == goal_index) {
+            printf("Solution found\n"); //TODO
+        }
+
+        // generate for each neighbour of current_element the AStar state
+        for (int i = 0; i < nodes[current_index].nsucc; ++i) {
+            unsigned long node_successor_index = nodes[current_index].successors[i];
+            double successor_current_cost =
+                    status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
+            if (status_list[node_successor_index].whq == OPEN) {
+                if (status_list[node_successor_index].g <= successor_current_cost) continue;
+
+            } else if (status_list[node_successor_index].whq == CLOSED) {
+                if (status_list[node_successor_index].g <= successor_current_cost) continue;
+                remove_element_from_list(node_successor_index, CLOSED_LIST);
+                add_element_to_list(node_successor_index, OPEN_LIST, status_list);
+                status_list[node_successor_index].whq = OPEN;
+            } else {
+                add_element_to_list(node_successor_index, OPEN_LIST, status_list);
+                status_list[node_successor_index].whq = OPEN;
+                status_list[node_successor_index].h = heuristic_distance(node_successor_index, goal_index, nodes,
+                                                                         nr_of_nodes);
+            }
+            status_list[node_successor_index].g = successor_current_cost;
+            status_list[node_successor_index].parent = current_index;
+        }
+        // add current_element to closed list and remove it from open list
+        CLOSED_LIST = add_element_to_list(current_index, CLOSED_LIST, status_list);
+        OPEN_LIST = remove_element_from_list(current_index, OPEN_LIST);
+        status_list[current_index].whq = CLOSED;
+    }
+    //TODO if(node_current != node_goal) exit with error (the OPEN list is empty)
 
 
 }
@@ -205,7 +260,7 @@ int main(int argc, char *argv[]) {
 
     if (binary == true) {
         nr_of_nodes = read_binary_file(filename, &nodes);
-        astar(8670491, 8670492, nodes, nr_of_nodes);
+//        astar(8670491, 8670492, nodes, nr_of_nodes);
     } else {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }

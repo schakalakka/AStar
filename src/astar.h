@@ -61,7 +61,7 @@ void build_edges(char *, node **, unsigned long, unsigned int *);
 // functions in astar.c
 unsigned long get_node_by_id(node *, unsigned long, unsigned long);
 
-double get_weight(unsigned, unsigned long, node *);
+double get_weight(unsigned long , unsigned long, node *);
 
 double heuristic_distance(unsigned long, unsigned long, node *, unsigned long);
 
