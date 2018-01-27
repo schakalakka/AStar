@@ -174,9 +174,9 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, uns
             strsep(&buffer, delimiters); // skip the first 7 useless entries
         }
         if (strcmp(strsep(&buffer, delimiters), "oneway") == 0) {
-            oneway = false;
-        } else {
             oneway = true;
+        } else {
+            oneway = false;
         }
         strsep(&buffer, delimiters); // skip maxspeed
 

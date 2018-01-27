@@ -4,7 +4,7 @@
 
 #include "astar.h"
 
-list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_list, AStarStatus *astar_status_list) {
+void add_element_to_list(unsigned long index_to_add, list_elem **start_of_list, AStarStatus *astar_status_list) {
     // adds an element to a list
     // the list is always sorted in ascending order
     // the sorting key is the fscore computed from the AStarStatus
@@ -13,16 +13,25 @@ list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_l
     // i.e. either the new element if it is the lowest or
     // the start from before
 
-    list_elem *next_elem = start_of_list;
+    list_elem *next_elem = NULL;
     list_elem *current_elem = NULL;
     list_elem *new_elem = NULL;
 
+    // we have to allocate memory to make it count across the borders of this method
+    new_elem = malloc(sizeof(list_elem));
+
+    next_elem = *start_of_list;
+
+
     // check if element is actually the lowest
-    if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
+    if ((next_elem == NULL) ||
+        (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index]))) {
         // add element to the beginning of the list
         // and return new element as the start of the list
-        *new_elem = (list_elem) {.index=index_to_add, .next=start_of_list};
-        return new_elem;
+        new_elem->index = index_to_add;
+        new_elem->next = next_elem;
+        *start_of_list = new_elem;
+        return;
     }
 
     // go through the list
@@ -32,31 +41,33 @@ list_elem *add_element_to_list(unsigned long index_to_add, list_elem *start_of_l
         if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
             // insert the element to the list between current_elem and next_elem
             // and return the start of the list (it did'nt change)
-            *new_elem = (list_elem) {.index=index_to_add, .next=next_elem};
+            new_elem->index = index_to_add;
+            new_elem->next = next_elem;
             current_elem->next = new_elem;
-            return start_of_list;
+            return;
         }
     }
     // we land here if we reached the end
     // i.e. the element has the worst fscore
-    *new_elem = (list_elem) {.index=index_to_add, .next=NULL};
+    new_elem->index = index_to_add;
+    new_elem->next = NULL;
     next_elem->next = new_elem;
-    return start_of_list;
+    return;
 }
 
-list_elem *remove_element_from_list(unsigned long index_to_remove, list_elem *start_of_list) {
+void remove_element_from_list(unsigned long index_to_remove, list_elem **start_of_list) {
     // removes an element from a list
     //
     // returns a pointer to the start of the list
 
-    list_elem *current_elem = start_of_list;
+    list_elem *current_elem = *start_of_list;
     list_elem *next_elem = NULL;
 
     // check if first element is the wanted one
     if (current_elem->index == index_to_remove) {
-        start_of_list = current_elem->next;
+        *start_of_list = current_elem->next;
         free(current_elem);
-        return start_of_list;
+        return;
     }
 
     // go through the list
@@ -65,7 +76,7 @@ list_elem *remove_element_from_list(unsigned long index_to_remove, list_elem *st
         if (next_elem->index == index_to_remove) {
             current_elem->next = next_elem->next;
             free(next_elem);
-            return start_of_list;
+            return;
         }
         current_elem = next_elem;
         next_elem = current_elem->next;
@@ -74,7 +85,7 @@ list_elem *remove_element_from_list(unsigned long index_to_remove, list_elem *st
     // if we are here we could not find the element in the list
     // not sure how to handle this so far
     // for now we throw an error and exit TODO
-    exit(1);
+    exit(99);
 }
 
 double get_fscore(AStarStatus astarstatus) {
@@ -117,11 +128,11 @@ double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *
     // if the nodes are not adjacent the return value is -1
 
     //check if nodes are adjacent
-    for (int i = 0; i < nodes[node_a_index].nsucc; ++i) {
-        if (nodes[node_a_index].successors[i] == node_b_index) {
-            return -1.0;
-        }
-    }
+//    for (int i = 0; i < nodes[node_a_index].nsucc; ++i) {
+//        if (nodes[node_a_index].successors[i] == node_b_index) {
+//            return -1.0;
+//        }
+//    }
 
     double lat_a = nodes[node_a_index].lat;
     double lon_a = nodes[node_a_index].lon;
@@ -157,7 +168,8 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node 
     // computation for heuristic here
 
 
-    return distance;
+//    return distance;
+    return get_weight(node_a_index, node_b_index, nodes);
 }
 
 
@@ -173,7 +185,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
 
     list_elem *OPEN_LIST = NULL;
     list_elem *CLOSED_LIST = NULL;
-
+    unsigned long counter = 0;
     list_elem *current_element;
 
     AStarStatus *status_list = malloc(nr_of_nodes * sizeof(AStarStatus));
@@ -181,9 +193,9 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
     // put node_start (i.e. start_index) in open list with fscore = hscore
     status_list[start_index].g = 0;
     status_list[start_index].h = heuristic_distance(start_index, goal_index, nodes, nr_of_nodes);
-    status_list[start_index].parent = ULONG_MAX;
+    status_list[start_index].parent = ULONG_MAX; //the parent is set to ULONG_MAX because the start node has no parent
     status_list[start_index].whq = OPEN;
-    OPEN_LIST = &(list_elem) {.index=start_index, .next=NULL};
+    add_element_to_list(start_index, &OPEN_LIST, status_list);
 
     // while open list is not empty
     while (OPEN_LIST != NULL) {
@@ -200,24 +212,25 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
         }
 
         if (current_index == goal_index) {
-            printf("Solution found\n"); //TODO
+            printf("Solution found. With length of %f.\n", status_list[current_index].g); //TODO
+            return;
         }
 
         // generate for each neighbour of current_element the AStar state
         for (int i = 0; i < nodes[current_index].nsucc; ++i) {
             unsigned long node_successor_index = nodes[current_index].successors[i];
-            double successor_current_cost =
-                    status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
+            double successor_current_cost =status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
             if (status_list[node_successor_index].whq == OPEN) {
                 if (status_list[node_successor_index].g <= successor_current_cost) continue;
 
             } else if (status_list[node_successor_index].whq == CLOSED) {
                 if (status_list[node_successor_index].g <= successor_current_cost) continue;
-                remove_element_from_list(node_successor_index, CLOSED_LIST);
-                add_element_to_list(node_successor_index, OPEN_LIST, status_list);
+                remove_element_from_list(node_successor_index, &CLOSED_LIST);
+                add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
+                printf("Reopen node %i\n", node_successor_index);
             } else {
-                add_element_to_list(node_successor_index, OPEN_LIST, status_list);
+                add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
                 status_list[node_successor_index].h = heuristic_distance(node_successor_index, goal_index, nodes,
                                                                          nr_of_nodes);
@@ -226,13 +239,17 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
             status_list[node_successor_index].parent = current_index;
         }
         // add current_element to closed list and remove it from open list
-        CLOSED_LIST = add_element_to_list(current_index, CLOSED_LIST, status_list);
-        OPEN_LIST = remove_element_from_list(current_index, OPEN_LIST);
+        add_element_to_list(current_index, &CLOSED_LIST, status_list);
+        remove_element_from_list(current_index, &OPEN_LIST);
         status_list[current_index].whq = CLOSED;
+        counter++;
+        printf("Closed node %i, Number of currently closed nodes: %d\n", current_index, counter);
     }
-    //TODO if(node_current != node_goal) exit with error (the OPEN list is empty)
 
-
+    if (goal_index != current_element->index) {
+        printf("No solution found. The OPEN_LIST is empty.\n");
+        exit(1);
+    }
 }
 
 
@@ -260,7 +277,7 @@ int main(int argc, char *argv[]) {
 
     if (binary == true) {
         nr_of_nodes = read_binary_file(filename, &nodes);
-//        astar(8670491, 8670492, nodes, nr_of_nodes);
+        astar(8670491, 30307973, nodes, nr_of_nodes);
     } else {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }

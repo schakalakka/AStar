@@ -69,6 +69,6 @@ void astar(unsigned long, unsigned long, node *, unsigned long);
 
 double get_fscore(AStarStatus);
 
-list_elem *add_element_to_list(unsigned long, list_elem *, AStarStatus *);
+void add_element_to_list(unsigned long, list_elem **, AStarStatus *);
 
-list_elem *remove_element_from_list(unsigned long, list_elem *);
+void remove_element_from_list(unsigned long, list_elem **);
