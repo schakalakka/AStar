@@ -143,6 +143,7 @@ double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *
 
     weight = sqrt((lat_a - lat_b) * (lat_a - lat_b) + (lon_a - lon_b) * (lon_a - lon_b));
 
+    weight = heuristic_distance(node_a_index, node_b_index, nodes, ULONG_MAX);
     return weight;
 }
 
