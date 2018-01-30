@@ -158,18 +158,20 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node 
     // if the indices are bigger or equal than the length of the node list, exit with error code 1
     if (nr_of_nodes <= node_a_index && nr_of_nodes <= node_b_index) exit(1);
 
-    double lat_a = nodes[node_a_index].lat;
-    double lon_a = nodes[node_a_index].lon;
-    double lat_b = nodes[node_b_index].lat;
-    double lon_b = nodes[node_b_index].lon;
+    double lat_a = nodes[node_a_index].lat*M_PI/180.0;
+    double lon_a = nodes[node_a_index].lon*M_PI/180.0;
+    double lat_b = nodes[node_b_index].lat*M_PI/180.0;
+    double lon_b = nodes[node_b_index].lon*M_PI/180.0;
+    double diff_lat = lat_a-lat_b;
+    double diff_lon = lon_a-lon_b;
+    double R = 6371000; // earth's radius
 
-    double distance = 0;
+    double a = sin(diff_lat/2)*sin(diff_lat/2)+cos(lat_a)*cos(lat_b)*sin(diff_lon/2)*sin(diff_lon/2);
+    double c = 2*atan2(sqrt(a), sqrt(1-a));
+    double distance = R*c;
 
-    // computation for heuristic here
-
-
-//    return distance;
-    return get_weight(node_a_index, node_b_index, nodes);
+    return distance;
+    //return get_weight(node_a_index, node_b_index, nodes);
 }
 
 
