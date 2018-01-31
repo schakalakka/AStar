@@ -130,17 +130,17 @@ double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // if the nodes are not adjacent the return value is -1
 
-    double lat_a = nodes[node_a_index].lat*M_PI/180.0;;
-    double lon_a = nodes[node_a_index].lon*M_PI/180.0;;
-    double lat_b = nodes[node_b_index].lat*M_PI/180.0;;
-    double lon_b = nodes[node_b_index].lon*M_PI/180.0;;
-    double diff_lat = lat_a-lat_b;
-    double diff_lon = lon_a-lon_b;
+    double lat_a = nodes[node_a_index].lat * M_PI / 180.0;;
+    double lon_a = nodes[node_a_index].lon * M_PI / 180.0;;
+    double lat_b = nodes[node_b_index].lat * M_PI / 180.0;;
+    double lon_b = nodes[node_b_index].lon * M_PI / 180.0;;
+    double diff_lat = lat_a - lat_b;
+    double diff_lon = lon_a - lon_b;
 
     double weight;
 
-    double x = diff_lon*cos((lat_a+lat_b)*0.5);
-    weight = R * sqrt(x*x + diff_lat*diff_lat);
+    double x = diff_lon * cos((lat_a + lat_b) * 0.5);
+    weight = R * sqrt(x * x + diff_lat * diff_lat);
 
     return weight;
 }
@@ -157,17 +157,17 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node 
     // if the indices are bigger or equal than the length of the node list, exit with error code 1
     if (nr_of_nodes <= node_a_index && nr_of_nodes <= node_b_index) exit(1);
 
-    double lat_a = nodes[node_a_index].lat*M_PI/180.0;
-    double lon_a = nodes[node_a_index].lon*M_PI/180.0;
-    double lat_b = nodes[node_b_index].lat*M_PI/180.0;
-    double lon_b = nodes[node_b_index].lon*M_PI/180.0;
-    double diff_lat = lat_a-lat_b;
-    double diff_lon = lon_a-lon_b;
+    double lat_a = nodes[node_a_index].lat * M_PI / 180.0;
+    double lon_a = nodes[node_a_index].lon * M_PI / 180.0;
+    double lat_b = nodes[node_b_index].lat * M_PI / 180.0;
+    double lon_b = nodes[node_b_index].lon * M_PI / 180.0;
+    double diff_lat = lat_a - lat_b;
+    double diff_lon = lon_a - lon_b;
 //    double R = 6371000; // earth's radius
 
-    double a = sin(diff_lat/2)*sin(diff_lat/2)+cos(lat_a)*cos(lat_b)*sin(diff_lon/2)*sin(diff_lon/2);
-    double c = 2*atan2(sqrt(a), sqrt(1-a));
-    double distance = R*c;
+    double a = sin(diff_lat / 2) * sin(diff_lat / 2) + cos(lat_a) * cos(lat_b) * sin(diff_lon / 2) * sin(diff_lon / 2);
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    double distance = R * c;
 
     return distance;
 }
@@ -179,6 +179,10 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
     // node_goal is the goal node id
     // the indices in the nodes list have to be obtained by get_node_by_id
     // nr_of_nodes states the length of the nodes list
+
+    unsigned long closed_list_counter = 0;
+    unsigned long open_list_counter = 0;
+
     unsigned long start_index = get_node_by_id(nodes, nr_of_nodes, node_start);
     unsigned long goal_index = get_node_by_id(nodes, nr_of_nodes, node_goal);
 
@@ -196,6 +200,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
     status_list[start_index].parent = ULONG_MAX; //the parent is set to ULONG_MAX because the start node has no parent
     status_list[start_index].whq = OPEN;
     add_element_to_list(start_index, &OPEN_LIST, status_list);
+    open_list_counter++; //TODO
 
     // while open list is not empty
     while (OPEN_LIST != NULL) {
@@ -219,7 +224,8 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
         // generate for each neighbour of current_element the AStar state
         for (int i = 0; i < nodes[current_index].nsucc; ++i) {
             unsigned long node_successor_index = nodes[current_index].successors[i];
-            double successor_current_cost =status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
+            double successor_current_cost =
+                    status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
             if (status_list[node_successor_index].whq == OPEN) {
                 if (status_list[node_successor_index].g <= successor_current_cost) continue;
 
@@ -229,11 +235,14 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
                 printf("Reopen node %i\n", node_successor_index);
+                closed_list_counter--; //TODO
+                open_list_counter++;
             } else {
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
                 status_list[node_successor_index].h = heuristic_distance(node_successor_index, goal_index, nodes,
                                                                          nr_of_nodes);
+                open_list_counter++; //TODO
             }
             status_list[node_successor_index].g = successor_current_cost;
             status_list[node_successor_index].parent = current_index;
@@ -243,7 +252,13 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
         remove_element_from_list(current_index, &OPEN_LIST);
         status_list[current_index].whq = CLOSED;
         counter++;
-        if (counter % 10000 == 0) printf("Closed node %i, Number of currently closed nodes: %d\n", current_index, counter);
+
+        closed_list_counter++; //TODO
+        open_list_counter--;
+
+        if (counter % 10000 == 0)
+            printf("Closed node %lu, Number of currently closed nodes: %lu, Current g: %f, Current h: %f, CLOSED: %lu, OPEN: %lu.\n",
+                   current_index, counter, status_list[current_index].g, status_list[current_index].h, closed_list_counter, open_list_counter);
     }
 
     if (goal_index != current_element->index) {
@@ -265,7 +280,7 @@ int main(int argc, char *argv[]) {
     //          ./astar /path/to/my/file.bin
 
 //    char *filename = "/home/andy/Dropbox/workspace/uab/AStar/cataluna.bin";
-    char * filename;
+    char *filename;
     bool binary = false;
 
 
@@ -280,8 +295,8 @@ int main(int argc, char *argv[]) {
 
     if (binary == true) {
         nr_of_nodes = read_binary_file(filename, &nodes);
-        astar(8670491, 30307973, nodes, nr_of_nodes);
-//        astar(240949599, 195977239, nodes, nr_of_nodes);
+//        astar(8670491, 30307973, nodes, nr_of_nodes);
+        astar(240949599, 195977239, nodes, nr_of_nodes);
     } else {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }
