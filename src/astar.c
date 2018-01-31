@@ -17,6 +17,8 @@ void add_element_to_list(unsigned long index_to_add, list_elem **start_of_list, 
     list_elem *current_elem = NULL;
     list_elem *new_elem = NULL;
 
+    double fscore_of_index_to_add = get_fscore(astar_status_list[index_to_add]);
+
     // we have to allocate memory to make it count across the borders of this method
     new_elem = malloc(sizeof(list_elem));
 
@@ -25,7 +27,7 @@ void add_element_to_list(unsigned long index_to_add, list_elem **start_of_list, 
 
     // check if element is actually the lowest
     if ((next_elem == NULL) ||
-        (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index]))) {
+        (fscore_of_index_to_add <= get_fscore(astar_status_list[next_elem->index]))) {
         // add element to the beginning of the list
         // and return new element as the start of the list
         new_elem->index = index_to_add;
@@ -38,7 +40,7 @@ void add_element_to_list(unsigned long index_to_add, list_elem **start_of_list, 
     while (next_elem->next != NULL) {
         current_elem = next_elem;
         next_elem = next_elem->next;
-        if (get_fscore(astar_status_list[index_to_add]) <= get_fscore(astar_status_list[next_elem->index])) {
+        if (fscore_of_index_to_add <= get_fscore(astar_status_list[next_elem->index])) {
             // insert the element to the list between current_elem and next_elem
             // and return the start of the list (it did'nt change)
             new_elem->index = index_to_add;
@@ -262,10 +264,13 @@ int main(int argc, char *argv[]) {
     // usage:   ./astar /path/to/my/file.csv  OR
     //          ./astar /path/to/my/file.bin
 
-    char *filename;
+//    char *filename = "/home/andy/Dropbox/workspace/uab/AStar/cataluna.bin";
+    char * filename;
     bool binary = false;
 
+
     strcpy(filename, argv[1]);
+
     if (strcmp(strrchr(filename, '.'), ".bin") == 0) {
         binary = true;
     }
