@@ -14,6 +14,14 @@
 #include <math.h>
 #include <limits.h>
 
+
+/////////////////////////////////////////////////////////////////////////////
+// CONSTANTS
+#define R 6371000
+
+
+/////////////////////////////////////////////////////////////////////////////
+// STRUCTS
 typedef struct {
     unsigned long id;
     char *name;
@@ -37,6 +45,10 @@ typedef struct list_elem {
     unsigned long index;
     struct list_elem *next;
 } list_elem;
+
+
+/////////////////////////////////////////////////////////////////////////////
+// METHODS
 
 //functions in parser.h
 unsigned long read_csv_file(char *, node **);

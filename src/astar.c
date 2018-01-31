@@ -122,28 +122,24 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
 
 
 double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *nodes) {
-    // returns the weight between two neighbouring nodes
-    // the weight is computed via the euclidean distance
+    // returns the Equirectangular approximation distance between two neighbouring nodes
+    // this approximation is less accurate than the heuristic distance but we use this only for really close nodes
+    // advantage: it is faster than the heuristic distance
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // if the nodes are not adjacent the return value is -1
 
-    //check if nodes are adjacent
-//    for (int i = 0; i < nodes[node_a_index].nsucc; ++i) {
-//        if (nodes[node_a_index].successors[i] == node_b_index) {
-//            return -1.0;
-//        }
-//    }
-
-    double lat_a = nodes[node_a_index].lat;
-    double lon_a = nodes[node_a_index].lon;
-    double lat_b = nodes[node_b_index].lat;
-    double lon_b = nodes[node_b_index].lon;
+    double lat_a = nodes[node_a_index].lat*M_PI/180.0;;
+    double lon_a = nodes[node_a_index].lon*M_PI/180.0;;
+    double lat_b = nodes[node_b_index].lat*M_PI/180.0;;
+    double lon_b = nodes[node_b_index].lon*M_PI/180.0;;
+    double diff_lat = lat_a-lat_b;
+    double diff_lon = lon_a-lon_b;
 
     double weight;
 
-    weight = sqrt((lat_a - lat_b) * (lat_a - lat_b) + (lon_a - lon_b) * (lon_a - lon_b));
+    double x = diff_lon*cos((lat_a+lat_b)*0.5);
+    weight = R * sqrt(x*x + diff_lat*diff_lat);
 
-    weight = heuristic_distance(node_a_index, node_b_index, nodes, ULONG_MAX);
     return weight;
 }
 
@@ -165,14 +161,13 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node 
     double lon_b = nodes[node_b_index].lon*M_PI/180.0;
     double diff_lat = lat_a-lat_b;
     double diff_lon = lon_a-lon_b;
-    double R = 6371000; // earth's radius
+//    double R = 6371000; // earth's radius
 
     double a = sin(diff_lat/2)*sin(diff_lat/2)+cos(lat_a)*cos(lat_b)*sin(diff_lon/2)*sin(diff_lon/2);
     double c = 2*atan2(sqrt(a), sqrt(1-a));
     double distance = R*c;
 
     return distance;
-    //return get_weight(node_a_index, node_b_index, nodes);
 }
 
 
@@ -246,7 +241,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
         remove_element_from_list(current_index, &OPEN_LIST);
         status_list[current_index].whq = CLOSED;
         counter++;
-        printf("Closed node %i, Number of currently closed nodes: %d\n", current_index, counter);
+        if (counter % 10000 == 0) printf("Closed node %i, Number of currently closed nodes: %d\n", current_index, counter);
     }
 
     if (goal_index != current_element->index) {
@@ -281,6 +276,7 @@ int main(int argc, char *argv[]) {
     if (binary == true) {
         nr_of_nodes = read_binary_file(filename, &nodes);
         astar(8670491, 30307973, nodes, nr_of_nodes);
+//        astar(240949599, 195977239, nodes, nr_of_nodes);
     } else {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }

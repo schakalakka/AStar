@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9.4)
 
 project(astar)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11 -g -lm")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -std=c11 -g -lm -fopenmp")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin")
 
