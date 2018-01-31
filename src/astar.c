@@ -54,7 +54,6 @@ void add_element_to_list(unsigned long index_to_add, list_elem **start_of_list, 
     new_elem->index = index_to_add;
     new_elem->next = NULL;
     next_elem->next = new_elem;
-    return;
 }
 
 void remove_element_from_list(unsigned long index_to_remove, list_elem **start_of_list) {
@@ -92,6 +91,7 @@ void remove_element_from_list(unsigned long index_to_remove, list_elem **start_o
 
 double get_fscore(AStarStatus astarstatus) {
     // returns the fscore from a node, in particular from an AStarStatus
+    // convenience function
     return astarstatus.g + astarstatus.h;
 }
 
@@ -125,7 +125,7 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
 
 double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *nodes) {
     // returns the Equirectangular approximation distance between two neighbouring nodes
-    // this approximation is less accurate than the heuristic distance but we use this only for really close nodes
+    // this approximation is less accurate than the heuristic 'haversine' distance but we use this only for really close nodes
     // advantage: it is faster than the heuristic distance
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // if the nodes are not adjacent the return value is -1
@@ -180,19 +180,17 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
     // the indices in the nodes list have to be obtained by get_node_by_id
     // nr_of_nodes states the length of the nodes list
 
-    unsigned long closed_list_counter = 0;
-    unsigned long open_list_counter = 0;
-
     unsigned long start_index = get_node_by_id(nodes, nr_of_nodes, node_start);
     unsigned long goal_index = get_node_by_id(nodes, nr_of_nodes, node_goal);
 
-
-    list_elem *OPEN_LIST = NULL;
-    list_elem *CLOSED_LIST = NULL;
-    unsigned long counter = 0;
-    list_elem *current_element;
-
     AStarStatus *status_list = malloc(nr_of_nodes * sizeof(AStarStatus));
+    list_elem *OPEN_LIST = NULL;
+    // we do not have to store a linked list for the closed nodes
+    // we can get this information from the AStarStatus/status_list
+    list_elem *current_element = NULL;
+
+    unsigned long node_successor_index;
+    double successor_current_cost;
 
     // put node_start (i.e. start_index) in open list with fscore = hscore
     status_list[start_index].g = 0;
@@ -200,7 +198,6 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
     status_list[start_index].parent = ULONG_MAX; //the parent is set to ULONG_MAX because the start node has no parent
     status_list[start_index].whq = OPEN;
     add_element_to_list(start_index, &OPEN_LIST, status_list);
-    open_list_counter++; //TODO
 
     // while open list is not empty
     while (OPEN_LIST != NULL) {
@@ -223,42 +220,29 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
 
         // generate for each neighbour of current_element the AStar state
         for (int i = 0; i < nodes[current_index].nsucc; ++i) {
-            unsigned long node_successor_index = nodes[current_index].successors[i];
-            double successor_current_cost =
+            node_successor_index = nodes[current_index].successors[i];
+            successor_current_cost =
                     status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
             if (status_list[node_successor_index].whq == OPEN) {
                 if (status_list[node_successor_index].g <= successor_current_cost) continue;
 
             } else if (status_list[node_successor_index].whq == CLOSED) {
                 if (status_list[node_successor_index].g <= successor_current_cost) continue;
-                remove_element_from_list(node_successor_index, &CLOSED_LIST);
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
-                printf("Reopen node %i\n", node_successor_index);
-                closed_list_counter--; //TODO
-                open_list_counter++;
+                printf("Reopen node %lu\n", node_successor_index);
             } else {
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
                 status_list[node_successor_index].h = heuristic_distance(node_successor_index, goal_index, nodes,
                                                                          nr_of_nodes);
-                open_list_counter++; //TODO
             }
             status_list[node_successor_index].g = successor_current_cost;
             status_list[node_successor_index].parent = current_index;
         }
-        // add current_element to closed list and remove it from open list
-        add_element_to_list(current_index, &CLOSED_LIST, status_list);
+        // set current_element to closed and remove it from open list
         remove_element_from_list(current_index, &OPEN_LIST);
         status_list[current_index].whq = CLOSED;
-        counter++;
-
-        closed_list_counter++; //TODO
-        open_list_counter--;
-
-        if (counter % 10000 == 0)
-            printf("Closed node %lu, Number of currently closed nodes: %lu, Current g: %f, Current h: %f, CLOSED: %lu, OPEN: %lu.\n",
-                   current_index, counter, status_list[current_index].g, status_list[current_index].h, closed_list_counter, open_list_counter);
     }
 
     if (goal_index != current_element->index) {
@@ -279,7 +263,6 @@ int main(int argc, char *argv[]) {
     // usage:   ./astar /path/to/my/file.csv  OR
     //          ./astar /path/to/my/file.bin
 
-//    char *filename = "/home/andy/Dropbox/workspace/uab/AStar/cataluna.bin";
     char *filename;
     bool binary = false;
 
@@ -300,5 +283,5 @@ int main(int argc, char *argv[]) {
     } else {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }
-    printf("%lu\n", nr_of_nodes);
+    printf("Number of nodes: %lu\n", nr_of_nodes);
 }
