@@ -260,7 +260,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
 }
 
 
-int main(int argc, char *argv) {
+int main(int argc, char *argv[]) {
     // depending on how the input file (only parameter) is named it will read a file and run the astar algorithm
     //
     // if file is named *.csv it will read the csv file and construct the graph (i.e. node list)
