@@ -35,6 +35,7 @@ enum whichQueue {
     NONE, OPEN, CLOSED
 };
 
+
 typedef struct {
     double g, h;
     unsigned long parent;
@@ -45,6 +46,11 @@ typedef struct list_elem {
     unsigned long index;
     struct list_elem *next;
 } list_elem;
+
+typedef char Heuristic;
+enum heuristic {
+    HAVERSINE, EQUIRECTANGULAR
+};
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -73,11 +79,13 @@ void build_edges(char *, node **, unsigned long, unsigned int *);
 // functions in astar.c
 unsigned long get_node_by_id(node *, unsigned long, unsigned long);
 
-double get_weight(unsigned long , unsigned long, node *);
+double heuristic_distance(unsigned long, unsigned long, node *, Heuristic distance_method);
 
-double heuristic_distance(unsigned long, unsigned long, node *, unsigned long);
+double haversine_distance(unsigned long, unsigned long, node *);
 
-void astar(unsigned long, unsigned long, node *, unsigned long);
+double equirectangular_distance(unsigned long, unsigned long, node *);
+
+void astar(unsigned long, unsigned long, node *, unsigned long, Heuristic);
 
 double get_fscore(AStarStatus);
 

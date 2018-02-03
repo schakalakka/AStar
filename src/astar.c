@@ -123,12 +123,13 @@ unsigned long get_node_by_id(node *nodes, unsigned long n, unsigned long id) {
 }
 
 
-double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *nodes) {
+double equirectangular_distance(unsigned long node_a_index, unsigned long node_b_index, node *nodes) {
     // returns the Equirectangular approximation distance between two neighbouring nodes
     // this approximation is less accurate than the heuristic 'haversine' distance but we use this only for really close nodes
     // advantage: it is faster than the heuristic distance
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // if the nodes are not adjacent the return value is -1
+
 
     double lat_a = nodes[node_a_index].lat * M_PI / 180.0;;
     double lon_a = nodes[node_a_index].lon * M_PI / 180.0;;
@@ -146,16 +147,13 @@ double get_weight(unsigned long node_a_index, unsigned long node_b_index, node *
 }
 
 
-double
-heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node *nodes, unsigned long nr_of_nodes) {
+double haversine_distance(unsigned long node_a_index, unsigned long node_b_index, node *nodes) {
     // returns the heuristic distance
     // i.e. the direct shortest distance on the air surface
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // not clear yet which computation method to use
     // look here http://www.movable-type.co.uk/scripts/latlong.html
 
-    // if the indices are bigger or equal than the length of the node list, exit with error code 1
-    if (nr_of_nodes <= node_a_index && nr_of_nodes <= node_b_index) exit(1);
 
     double lat_a = nodes[node_a_index].lat * M_PI / 180.0;
     double lon_a = nodes[node_a_index].lon * M_PI / 180.0;
@@ -163,7 +161,6 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node 
     double lon_b = nodes[node_b_index].lon * M_PI / 180.0;
     double diff_lat = lat_a - lat_b;
     double diff_lon = lon_a - lon_b;
-//    double R = 6371000; // earth's radius
 
     double a = sin(diff_lat / 2) * sin(diff_lat / 2) + cos(lat_a) * cos(lat_b) * sin(diff_lon / 2) * sin(diff_lon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
@@ -172,8 +169,18 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node 
     return distance;
 }
 
+double
+heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node *nodes, Heuristic distance_method) {
+    if (distance_method == HAVERSINE) {
+        return haversine_distance(node_a_index, node_b_index, nodes);
+    } else if (distance_method == EQUIRECTANGULAR) {
+        return equirectangular_distance(node_a_index, node_b_index, nodes);
+    }
+    exit(99); // throw error if no correct distance_method is set
+}
 
-void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsigned long nr_of_nodes) {
+void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsigned long nr_of_nodes,
+           Heuristic distance_method) {
     //
     // node_start is the source node id
     // node_goal is the goal node id
@@ -194,7 +201,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
 
     // put node_start (i.e. start_index) in open list with fscore = hscore
     status_list[start_index].g = 0;
-    status_list[start_index].h = heuristic_distance(start_index, goal_index, nodes, nr_of_nodes);
+    status_list[start_index].h = heuristic_distance(start_index, goal_index, nodes, distance_method);
     status_list[start_index].parent = ULONG_MAX; //the parent is set to ULONG_MAX because the start node has no parent
     status_list[start_index].whq = OPEN;
     add_element_to_list(start_index, &OPEN_LIST, status_list);
@@ -222,7 +229,8 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
         for (int i = 0; i < nodes[current_index].nsucc; ++i) {
             node_successor_index = nodes[current_index].successors[i];
             successor_current_cost =
-                    status_list[current_index].g + get_weight(current_index, node_successor_index, nodes);
+                    status_list[current_index].g +
+                    heuristic_distance(current_index, node_successor_index, nodes, distance_method);
             if (status_list[node_successor_index].whq == OPEN) {
                 if (status_list[node_successor_index].g <= successor_current_cost) continue;
 
@@ -235,7 +243,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
                 status_list[node_successor_index].h = heuristic_distance(node_successor_index, goal_index, nodes,
-                                                                         nr_of_nodes);
+                                                                         distance_method);
             }
             status_list[node_successor_index].g = successor_current_cost;
             status_list[node_successor_index].parent = current_index;
@@ -252,7 +260,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node *nodes, unsig
 }
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv) {
     // depending on how the input file (only parameter) is named it will read a file and run the astar algorithm
     //
     // if file is named *.csv it will read the csv file and construct the graph (i.e. node list)
@@ -263,25 +271,32 @@ int main(int argc, char *argv[]) {
     // usage:   ./astar /path/to/my/file.csv  OR
     //          ./astar /path/to/my/file.bin
 
+//    char *filename="/home/andy/Dropbox/workspace/uab/AStar/cataluna.csv";
+//    char *filename="/home/andy/Dropbox/workspace/uab/AStar/spain.bin";
     char *filename;
-    bool binary = false;
+    bool binary = false; // switch for reading a .csv or a .bin file, depends on the line ending
 
-
+//    if (argc == 0) {
+//        printf("Please specify at least a .csv for parsing or a .bin for computing a route.\nUsage: ./astar spain.csv");
+//    }
     strcpy(filename, argv[1]);
 
+    //check if binary file or not (otherwise a csv file is assumed)
     if (strcmp(strrchr(filename, '.'), ".bin") == 0) {
         binary = true;
     }
 
+    Heuristic distance_method = HAVERSINE;
     unsigned long nr_of_nodes;
     node *nodes;
+    unsigned long node_start = 240949599; //default start node for the spain.csv
+    unsigned node_goal = 195977239; //default end node for the spain.csv
 
-    if (binary == true) {
-        nr_of_nodes = read_binary_file(filename, &nodes);
-//        astar(8670491, 30307973, nodes, nr_of_nodes);
-        astar(240949599, 195977239, nodes, nr_of_nodes);
-    } else {
+    if (binary == false) {
         nr_of_nodes = read_csv_file(filename, &nodes);
+    } else if (binary == true) {
+        nr_of_nodes = read_binary_file(filename, &nodes);
+//        astar(8670491, 30307973, nodes, nr_of_nodes, distance_method);
+        astar(node_start, node_goal, nodes, nr_of_nodes, distance_method);
     }
-    printf("Number of nodes: %lu\n", nr_of_nodes);
 }
