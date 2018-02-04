@@ -271,14 +271,19 @@ int main(int argc, char *argv[]) {
     // usage:   ./astar /path/to/my/file.csv  OR
     //          ./astar /path/to/my/file.bin
 
-//    char *filename="/home/andy/Dropbox/workspace/uab/AStar/cataluna.csv";
-//    char *filename="/home/andy/Dropbox/workspace/uab/AStar/spain.bin";
-    char *filename;
+    char filename[100];
     bool binary = false; // switch for reading a .csv or a .bin file, depends on the line ending
+
+    Heuristic distance_method = HAVERSINE;
+    unsigned long nr_of_nodes;
+    node *nodes;
+    unsigned long node_start = 240949599; //default start node id for the spain.csv
+    unsigned node_goal = 195977239; //default end node id for the spain.csv
 
 //    if (argc == 0) {
 //        printf("Please specify at least a .csv for parsing or a .bin for computing a route.\nUsage: ./astar spain.csv");
 //    }
+
     strcpy(filename, argv[1]);
 
     //check if binary file or not (otherwise a csv file is assumed)
@@ -286,17 +291,11 @@ int main(int argc, char *argv[]) {
         binary = true;
     }
 
-    Heuristic distance_method = HAVERSINE;
-    unsigned long nr_of_nodes;
-    node *nodes;
-    unsigned long node_start = 240949599; //default start node for the spain.csv
-    unsigned node_goal = 195977239; //default end node for the spain.csv
 
     if (binary == false) {
         nr_of_nodes = read_csv_file(filename, &nodes);
-    } else if (binary == true) {
+    } else {
         nr_of_nodes = read_binary_file(filename, &nodes);
-//        astar(8670491, 30307973, nodes, nr_of_nodes, distance_method);
         astar(node_start, node_goal, nodes, nr_of_nodes, distance_method);
     }
 }
