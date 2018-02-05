@@ -222,7 +222,7 @@ void get_edges(FILE *fp, char *buffer, const char *delimiters, node **nodes, uns
     // therefore we allocate the memory for the adjacency list once for all nodes
     // to avoid reallocations
     if (nsucc_only == true) {
-        for (int i = 0; i < nr_of_nodes; ++i) {
+        for (unsigned long i = 0; i < nr_of_nodes; ++i) {
             ((*nodes) + i)->successors = malloc(((*nodes) + i)->nsucc * sizeof(unsigned long));
         }
     }
@@ -235,7 +235,7 @@ void write_binary_file(char *filename, node *nodes, unsigned long nr_of_nodes) {
 
     FILE *fin;
     unsigned long ntotnsucc = 0UL;
-    for (int i = 0; i < nr_of_nodes; i++) ntotnsucc += nodes[i].nsucc;
+    for (unsigned long i = 0; i < nr_of_nodes; i++) ntotnsucc += nodes[i].nsucc;
 
     strcpy(strrchr(filename, '.'), ".bin");
 
@@ -249,7 +249,7 @@ void write_binary_file(char *filename, node *nodes, unsigned long nr_of_nodes) {
     if (fwrite(nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(32);
 
     /* Writing sucessors in blocks */
-    for (int i = 0; i < nr_of_nodes; i++)
+    for (unsigned long i = 0; i < nr_of_nodes; i++)
         if (nodes[i].nsucc) {
             if (fwrite(nodes[i].successors, sizeof(unsigned long), nodes[i].nsucc, fin) !=
                 nodes[i].nsucc)
@@ -286,7 +286,7 @@ unsigned long read_binary_file(char *filename, node **nodes) {
 
     fclose(fin);
     /* Setting pointers to successors */
-    for (int i = 0; i < nr_of_nodes; i++)
+    for (unsigned long i = 0; i < nr_of_nodes; i++)
         if ((*nodes)[i].nsucc) {
             (*nodes)[i].successors = allsuccessors;
             allsuccessors += (*nodes)[i].nsucc;

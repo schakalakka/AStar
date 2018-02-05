@@ -195,9 +195,12 @@ void write_solution_to_file(char * filename, unsigned long node_start_index, uns
     strcpy(strrchr(filename, '.'), ".out");
 
     if ((fout = fopen(filename, "w")) == NULL) exit(31);
+
+    fprintf(fout, "Optimal Path found: \n");
+
     unsigned long current_index = node_goal_index;
     while (current_index != ULONG_MAX){
-        fprintf(fout, "Node id:\t %lu\t| Distance:\t%f\t| Name: \n", nodes[current_index].id, status_list[current_index].g);
+        fprintf(fout, "Node id:\t %lu\t| Distance:\t%.2f\t| Name: \n", nodes[current_index].id, status_list[current_index].g);
         current_index = status_list[current_index].parent;
     }
     fclose(fout);
