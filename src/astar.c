@@ -188,14 +188,24 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node*
     exit(99); // throw error if no correct distance_method is set
 }
 
-void write_solution_to_file(unsigned long node_start, unsigned long node_goal, node* nodes, unsigned long nr_of_nodes,
+void write_solution_to_file(char * filename, unsigned long node_start_index, unsigned long node_goal_index, node* nodes, unsigned long nr_of_nodes,
         AStarStatus* status_list)
 {
+    FILE * fout;
+    strcpy(strrchr(filename, '.'), ".out");
+
+    if ((fout = fopen(filename, "w")) == NULL) exit(31);
+    unsigned long current_index = node_goal_index;
+    while (current_index != ULONG_MAX){
+        fprintf(fout, "Node id:\t %lu\t| Distance:\t%f\t| Name: \n", nodes[current_index].id, status_list[current_index].g);
+        current_index = status_list[current_index].parent;
+    }
+    fclose(fout);
 
 }
 
 void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsigned long nr_of_nodes,
-        Heuristic distance_method)
+        Heuristic distance_method, char * filename)
 {
     // node_start is the source node id
     // node_goal is the goal node id
@@ -223,20 +233,13 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
 
     // while open list is not empty
     while (OPEN_LIST!=NULL) {
-        // find minimal node
+        // get minimal node
         current_element = OPEN_LIST;
-//        double current_fscore = get_fscore(status_list[current_element->index]);
         unsigned long current_index = current_element->index;
-//        while (current_element->next!=NULL) {
-//            current_element = current_element->next;
-//            if (current_fscore>get_fscore(status_list[current_element->index])) {
-//                current_fscore = get_fscore(status_list[current_element->index]);
-//                current_index = current_element->index;
-//            }
-//        }
 
         if (current_index==goal_index) {
             printf("Solution found. With length of %f.\n", status_list[current_index].g); //TODO
+            write_solution_to_file(filename, start_index, goal_index, nodes, nr_of_nodes, status_list);
             return;
         }
 
@@ -330,6 +333,6 @@ int main(int argc, char* argv[])
     }
     else {
         nr_of_nodes = read_binary_file(filename, &nodes);
-        astar(node_start, node_goal, nodes, nr_of_nodes, distance_method);
+        astar(node_start, node_goal, nodes, nr_of_nodes, distance_method, filename);
     }
 }

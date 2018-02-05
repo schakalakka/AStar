@@ -85,7 +85,7 @@ double haversine_distance(unsigned long, unsigned long, node *);
 
 double equirectangular_distance(unsigned long, unsigned long, node *);
 
-void astar(unsigned long, unsigned long, node *, unsigned long, Heuristic);
+void astar(unsigned long, unsigned long, node *, unsigned long, Heuristic, char *);
 
 double get_fscore(AStarStatus);
 

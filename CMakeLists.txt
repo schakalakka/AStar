@@ -8,4 +8,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "bin")
 
 set(SOURCE_FILES src/astar.c src/astar.h src/parser.c)
 
-add_executable(astar ${SOURCE_FILES})
+add_executable(astar ${SOURCE_FILES} )
