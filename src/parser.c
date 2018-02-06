@@ -243,17 +243,17 @@ void write_binary_file(char *filename, node *nodes, unsigned long nr_of_nodes) {
 
     /* Global data --- header */
     if (fwrite(&nr_of_nodes, sizeof(unsigned long), 1, fin) + fwrite(&ntotnsucc, sizeof(unsigned long), 1, fin) != 2)
-        exit(32);
+        exit(33);
 
     /* Writing all nodes */
-    if (fwrite(nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(32);
+    if (fwrite(nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(33);
 
     /* Writing sucessors in blocks */
     for (unsigned long i = 0; i < nr_of_nodes; i++)
         if (nodes[i].nsucc) {
             if (fwrite(nodes[i].successors, sizeof(unsigned long), nodes[i].nsucc, fin) !=
                 nodes[i].nsucc)
-                exit(32);
+                exit(33);
         }
     fclose(fin);
 }
@@ -268,21 +268,21 @@ unsigned long read_binary_file(char *filename, node **nodes) {
     unsigned long ntotnsucc = 0UL;
     unsigned long *allsuccessors;
 
-    if ((fin = fopen(filename, "r")) == NULL) exit(11);
+    if ((fin = fopen(filename, "r")) == NULL) exit(31);
 
     /* Global data --- header */
     if (fread(&nr_of_nodes, sizeof(unsigned long), 1, fin) + fread(&ntotnsucc, sizeof(unsigned long), 1, fin) != 2)
         exit(12);
 
     /* getting memory for all data */
-    if ((*nodes = (node *) malloc(nr_of_nodes * sizeof(node))) == NULL) exit(13);
+    if ((*nodes = (node *) malloc(nr_of_nodes * sizeof(node))) == NULL) exit(32);
 
-    if ((allsuccessors = (unsigned long *) malloc(ntotnsucc * sizeof(unsigned long))) == NULL) exit(15);
+    if ((allsuccessors = (unsigned long *) malloc(ntotnsucc * sizeof(unsigned long))) == NULL) exit(32);
 
     /* Reading all data from file */
-    if (fread(*nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(17);
+    if (fread(*nodes, sizeof(node), nr_of_nodes, fin) != nr_of_nodes) exit(32);
 
-    if (fread(allsuccessors, sizeof(unsigned long), ntotnsucc, fin) != ntotnsucc) exit(18);
+    if (fread(allsuccessors, sizeof(unsigned long), ntotnsucc, fin) != ntotnsucc) exit(32);
 
     fclose(fin);
     /* Setting pointers to successors */
@@ -300,8 +300,6 @@ unsigned long read_csv_file(char *filename, node **nodes) {
 
     unsigned long nr_of_nodes = 0;
     // count number of nodes for a proper array initialization no reallocs
-    // not sure what is faster here: read node lines twice and malloc once
-    // or read once and realloc if necessary
     // also number of neighbours for each nodes are read beforehand and stored
     // therefore we only have to allocate memory for the adjacency lists once
     nr_of_nodes = get_nr_of_nodes(filename);

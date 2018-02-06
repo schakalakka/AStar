@@ -87,8 +87,8 @@ void remove_element_from_list(unsigned long index_to_remove, list_elem** start_o
 
     // if we are here we could not find the element in the list
     // not sure how to handle this so far
-    // for now we throw an error and exit TODO
-    exit(99);
+    // for now we throw an error and exit
+    exit(41);
 }
 
 double get_fscore(AStarStatus astarstatus)
@@ -134,7 +134,6 @@ double equirectangular_distance(unsigned long node_a_index, unsigned long node_b
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself and the length of the list.
     // if the nodes are not adjacent the return value is -1
 
-
     double lat_a = nodes[node_a_index].lat*M_PI/180.0;;
     double lon_a = nodes[node_a_index].lon*M_PI/180.0;;
     double lat_b = nodes[node_b_index].lat*M_PI/180.0;;
@@ -153,7 +152,6 @@ double equirectangular_distance(unsigned long node_a_index, unsigned long node_b
 double haversine_distance(unsigned long node_a_index, unsigned long node_b_index, node* nodes)
 {
     // returns the haversine distance
-    // i.e. the direct shortest distance on the air surface
     // given are two indices (not IDs) of nodes in the nodes list, the nodes list itself
 
     double lat_a = nodes[node_a_index].lat*M_PI/180.0;
@@ -185,7 +183,7 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node*
     else if (distance_method==EQUIRECTANGULAR) {
         return equirectangular_distance(node_a_index, node_b_index, nodes);
     }
-    exit(99); // throw error if no correct distance_method is set
+    exit(51); // throw error if no correct distance_method is set
 }
 
 void write_solution_to_file(char* filename, unsigned long node_goal_index, node* nodes, AStarStatus* status_list)
@@ -228,6 +226,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
     // we do not have to store a linked list for the closed nodes
     // we can get this information from the AStarStatus/status_list
     list_elem* current_element = NULL;
+    unsigned long current_index;
 
     unsigned long node_successor_index;
     double successor_current_cost;
@@ -243,7 +242,7 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
     while (OPEN_LIST!=NULL) {
         // get minimal node
         current_element = OPEN_LIST;
-        unsigned long current_index = current_element->index;
+        current_index = current_element->index;
 
         if (current_index==goal_index) {
             printf("Solution found. With length of %f.\n", status_list[current_index].g);
@@ -262,6 +261,8 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
                 else {
                     status_list[node_successor_index].g = successor_current_cost;
                     status_list[node_successor_index].parent = current_index;
+                    // we have to remove and add the element again because the distances were updated
+                    // and we want to keep a sorted list
                     remove_element_from_list(node_successor_index, &OPEN_LIST);
                     add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 }
@@ -272,7 +273,6 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
                 status_list[node_successor_index].parent = current_index;
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
                 status_list[node_successor_index].whq = OPEN;
-                printf("Reopen node %lu\n", node_successor_index);
             }
             else {
                 status_list[node_successor_index].g = successor_current_cost;
@@ -282,18 +282,15 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
                         distance_method);
                 add_element_to_list(node_successor_index, &OPEN_LIST, status_list);
             }
-//            status_list[node_successor_index].g = successor_current_cost;
-//            status_list[node_successor_index].parent = current_index;
         }
         // set current_element to closed and remove it from open list
         remove_element_from_list(current_index, &OPEN_LIST);
         status_list[current_index].whq = CLOSED;
     }
 
-    if (goal_index!=current_element->index) {
-        printf("No solution found. The OPEN_LIST is empty.\n");
-        exit(1);
-    }
+    // if we reach this we did not find a solution
+    printf("No solution found. The OPEN_LIST is empty.\n");
+    exit(11);
 }
 
 int main(int argc, char* argv[])
@@ -317,8 +314,10 @@ int main(int argc, char* argv[])
     unsigned long node_start = 240949599; //default start node id for the spain.csv
     unsigned long node_goal = 195977239; //default end node id for the spain.csv
 
+    //parse command line arguments
     if (argc<=1) {
         printf("Please specify at least a .csv for parsing or a .bin for computing a route.\nUsage: ./astar spain.csv");
+        exit(1);
     }
     else if (argc>=2) {
         //set filename
@@ -336,6 +335,8 @@ int main(int argc, char* argv[])
         binary = true;
     }
 
+    //read either a .csv file and create a binary file
+    // or read a binary file and compute a route
     if (binary==false) {
         nr_of_nodes = read_csv_file(filename, &nodes);
     }

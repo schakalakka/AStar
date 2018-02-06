@@ -17,7 +17,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // CONSTANTS
-#define R 6371000
+#define R 6371000 // Earth's radius
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -92,3 +92,5 @@ double get_fscore(AStarStatus);
 void add_element_to_list(unsigned long, list_elem **, AStarStatus *);
 
 void remove_element_from_list(unsigned long, list_elem **);
+
+void write_solution_to_file(char* , unsigned long , node* , AStarStatus* );
