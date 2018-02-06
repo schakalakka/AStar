@@ -188,32 +188,37 @@ heuristic_distance(unsigned long node_a_index, unsigned long node_b_index, node*
     exit(99); // throw error if no correct distance_method is set
 }
 
-void write_solution_to_file(char * filename, unsigned long node_start_index, unsigned long node_goal_index, node* nodes, unsigned long nr_of_nodes,
-        AStarStatus* status_list)
+void write_solution_to_file(char* filename, unsigned long node_goal_index, node* nodes, AStarStatus* status_list)
 {
-    FILE * fout;
+    // if an optimal solution is found this function is called
+    // and will write the path from destination to source (so in reverse order!) into a file like spain.out
+
+    FILE* fout;
     strcpy(strrchr(filename, '.'), ".out");
 
-    if ((fout = fopen(filename, "w")) == NULL) exit(31);
+    if ((fout = fopen(filename, "w"))==NULL) exit(31);
 
     fprintf(fout, "Optimal Path found: \n");
 
     unsigned long current_index = node_goal_index;
-    while (current_index != ULONG_MAX){
-        fprintf(fout, "Node id:\t %lu\t| Distance:\t%.2f\t| Name: \n", nodes[current_index].id, status_list[current_index].g);
+    while (current_index!=ULONG_MAX) {
+        fprintf(fout, "Node id:\t %lu\t| Distance:\t%.2f\n", nodes[current_index].id, status_list[current_index].g);
         current_index = status_list[current_index].parent;
     }
     fclose(fout);
+    printf("Optimal Path is written to %s", filename);
 
 }
 
 void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsigned long nr_of_nodes,
-        Heuristic distance_method, char * filename)
+        Heuristic distance_method, char* filename)
 {
     // node_start is the source node id
     // node_goal is the goal node id
     // the indices in the nodes list have to be obtained by get_node_by_id
     // nr_of_nodes states the length of the nodes list
+    // the distance_method is either HAVERSINE (more accurate) or EQUIRECTANGULAR (faster) for the distance computation
+    // filename is used to pass the parameter to write_solution_to_file function for the output solution file
 
     unsigned long start_index = get_node_by_id(nodes, nr_of_nodes, node_start);
     unsigned long goal_index = get_node_by_id(nodes, nr_of_nodes, node_goal);
@@ -241,8 +246,8 @@ void astar(unsigned long node_start, unsigned long node_goal, node* nodes, unsig
         unsigned long current_index = current_element->index;
 
         if (current_index==goal_index) {
-            printf("Solution found. With length of %f.\n", status_list[current_index].g); //TODO
-            write_solution_to_file(filename, start_index, goal_index, nodes, nr_of_nodes, status_list);
+            printf("Solution found. With length of %f.\n", status_list[current_index].g);
+            write_solution_to_file(filename, goal_index, nodes, status_list);
             return;
         }
 
