@@ -24,7 +24,6 @@
 // STRUCTS
 typedef struct {
     unsigned long id;
-    char *name;
     double lat, lon; //node coordinates
     unsigned short nsucc; //number of node successors, i.e. length of successors
     unsigned long *successors;
